@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: blockchain-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eth_indexer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blockchain-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: blockchain-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - blockchain-network
+    depends_on:
+      - postgres
+
+  # API Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blockchain-api
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/eth_indexer
+      RPC_URL: https://eth-mainnet.public.blastapi.io
+      BITCOIN_RPC_URL: https://chain.instanodes.io/btcbbk-testnet/api/v2
+      BITCOIN_API_KEY: c4vMzpVERO6v-qubetics-p9FNly1pPWYt
+    ports:
+      - "3000:3000"
+    networks:
+      - blockchain-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: node src/api/server.js
+    restart: unless-stopped
+
+  # Ethereum Indexer
+  eth-indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eth-indexer
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/eth_indexer
+      RPC_URL: https://eth-mainnet.public.blastapi.io
+    networks:
+      - blockchain-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: node src/indexer/index.js
+    restart: unless-stopped
+
+  # Bitcoin Indexer
+  btc-indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: btc-indexer
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/eth_indexer
+      BITCOIN_RPC_URL: https://chain.instanodes.io/btcbbk-testnet/api/v2
+      BITCOIN_API_KEY: c4vMzpVERO6v-qubetics-p9FNly1pPWYt
+    networks:
+      - blockchain-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: node src/indexer/btc-indexer.js
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: blockchain-frontend
+    ports:
+      - "80:80"
+    networks:
+      - blockchain-network
+    depends_on:
+      - api
+    restart: unless-stopped
+
+networks:
+  blockchain-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

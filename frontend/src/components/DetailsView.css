@@ -1,0 +1,157 @@
+.details-view {
+  animation: fadeIn 0.5s ease;
+}
+
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row.column {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.value {
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+}
+
+.mono {
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
+  font-size: 0.9em;
+  word-break: break-all;
+}
+
+.wrap {
+  text-align: left;
+  background: #f1f5f9;
+  padding: 0.8rem;
+  border-radius: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.tx-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.mini-card {
+  padding: 1rem;
+  margin-bottom: 0;
+  font-size: 0.9em;
+}
+
+.tag {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.tag.in {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+
+.tag.out {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.clickable:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-color);
+  background: #f8fafc;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.value-with-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover {
+  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.bold { font-weight: 700; }
+.primary { color: var(--primary-color); }
+
