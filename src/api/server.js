@@ -3,6 +3,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const express = require('express');
 const cors = require('cors');
 const db = require('../db');
+const axios = require('axios');
 
 const app = express();
 app.use(cors());
@@ -120,6 +121,23 @@ app.get('/address/:address', async (req, res) => {
 
 // ==== BITCOIN ENDPOINTS ====
 
+const formatBtcTx = (tx) => {
+  const vin = typeof tx.vin === 'string' ? JSON.parse(tx.vin || '[]') : tx.vin || [];
+  const vout = typeof tx.vout === 'string' ? JSON.parse(tx.vout || '[]') : tx.vout || [];
+  
+  const from_address = vin[0]?.addresses?.[0] || 'Unknown';
+  const to_output = vout.find(o => o.addresses?.[0] !== from_address) || vout[0];
+  const to_address = to_output?.addresses?.[0] || 'Unknown';
+  
+  return {
+    ...tx,
+    vin,
+    vout,
+    from_address,
+    to_address
+  };
+};
+
 // Get Bitcoin block by number or hash
 app.get('/btc/block/:id', async (req, res) => {
   try {
@@ -144,11 +162,7 @@ app.get('/btc/block/:id', async (req, res) => {
       [block.block_number]
     );
     
-    block.transactions = txResult.rows.map(tx => ({
-      ...tx,
-      vin: JSON.parse(tx.vin || '[]'),
-      vout: JSON.parse(tx.vout || '[]')
-    }));
+    block.transactions = txResult.rows.map(formatBtcTx);
     res.json(block);
   } catch (err) {
     console.error(err);
@@ -162,18 +176,22 @@ app.get('/btc/tx/:hash', async (req, res) => {
     const { hash } = req.params;
     const result = await db.query('SELECT * FROM btc_transactions WHERE tx_hash = $1', [hash]);
     
-    if (result.rows.length === 0) {
+    if (result.rows.length > 0) {
+      return res.json(formatBtcTx(result.rows[0]));
+    }
+
+    // Not in local DB, fetch from API
+    const BITCOIN_RPC_URL = process.env.BITCOIN_RPC_URL;
+    const BITCOIN_API_KEY = process.env.BITCOIN_API_KEY;
+    
+    const response = await axios.get(`${BITCOIN_RPC_URL}/tx/${hash}?apikey=${BITCOIN_API_KEY}`);
+    res.json(response.data);
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
-    
-    const tx = result.rows[0];
-    tx.vin = JSON.parse(tx.vin || '[]');
-    tx.vout = JSON.parse(tx.vout || '[]');
-    
-    res.json(tx);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error(`Error fetching transaction ${req.params.hash}:`, err.message);
+    res.status(500).json({ error: 'Internal Server Error or API Error' });
   }
 });
 
@@ -194,12 +212,40 @@ app.get('/btc/blocks/latest', async (req, res) => {
 app.get('/btc/transactions/latest', async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT tx_hash, block_number, timestamp, size FROM btc_transactions ORDER BY block_number DESC LIMIT 10'
+      'SELECT tx_hash, block_number, timestamp, size, vin, vout FROM btc_transactions ORDER BY block_number DESC LIMIT 10'
     );
-    res.json(result.rows);
+    
+    const transactions = result.rows.map(formatBtcTx);
+    res.json(transactions);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get Bitcoin address details (Proxy to Upstream API)
+app.get('/btc/address/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+    const BITCOIN_RPC_URL = process.env.BITCOIN_RPC_URL;
+    const BITCOIN_API_KEY = process.env.BITCOIN_API_KEY;
+
+    // Use Blockbook API structure: /api/v2/address/:address
+    // Assuming BITCOIN_RPC_URL is the base URL like https://btcbook.nownodes.io/api/v2
+    
+    // We need to be careful about the URL construction based on how it's defined in env
+    // In btc-indexer.js it was used as: axios.get(`${BITCOIN_RPC_URL}/block/${blockNumber}?apikey=${BITCOIN_API_KEY}`);
+    // So BITCOIN_RPC_URL likely ends in /api/v2 or is the root.
+    // Let's assume standard Blockbook paths.
+    
+    const response = await axios.get(`${BITCOIN_RPC_URL}/address/${address}?apikey=${BITCOIN_API_KEY}`);
+    res.json(response.data);
+  } catch (err) {
+    console.error(`Error fetching address ${req.params.address}:`, err.message);
+    if (err.response && err.response.status === 404) {
+         return res.status(404).json({ error: 'Address not found' });
+    }
+    res.status(500).json({ error: 'Error fetching address data' });
   }
 });
 

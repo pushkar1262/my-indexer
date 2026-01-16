@@ -1,16 +1,17 @@
 .search-bar {
   display: flex;
   width: 100%;
-  max-width: 450px;
+  max-width: 400px; /* Slightly narrower */
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 12px;
-  padding: 8px 16px;
+  padding: 4px 10px; /* Compact padding */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-sm);
   align-items: center;
   position: relative;
   overflow: hidden;
+  height: 40px; /* Reduced height */
 }
 
 .search-bar:focus-within {
@@ -24,8 +25,8 @@
   border: none;
   background: transparent;
   width: 100%;
-  padding: 8px;
-  font-size: 0.95rem;
+  padding: 6px 8px; /* Adjusted padding */
+  font-size: 0.9rem; /* Slightly smaller font */
   color: var(--text-primary);
   outline: none;
   font-family: 'Inter', sans-serif;
@@ -50,12 +51,16 @@
   background: var(--primary-color);
   color: white;
   border: none;
-  padding: 6px 16px;
+  padding: 4px 12px; /* Compact padding */
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem; /* Slightly smaller font */
   cursor: pointer;
   transition: all 0.2s ease;
+  height: 28px; /* Fixed height for consistency */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-btn:hover {

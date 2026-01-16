@@ -1,7 +1,8 @@
-import { FileText, Copy, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileText, Copy, Check, ArrowLeft } from 'lucide-react';
 import { formatValue, copyToClipboard } from '../utils';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import Card from './Card';
 import './DetailsView.css';
 
 export function TxView({ tx }) {
@@ -17,56 +18,68 @@ export function TxView({ tx }) {
   };
 
   return (
-    <div className="details-view">
-      <div className="header-row">
-        <h2><FileText size={24} /> Transaction Details</h2>
-        <button className="back-btn" onClick={() => navigate('/')}>Back to Dashboard</button>
+    <div className="view-container fade-in">
+      <Link to="/eth" className="back-link">
+        <ArrowLeft size={16} /> Back to Dashboard
+      </Link>
+
+      <div className="view-header">
+        <h1><FileText size={24} style={{ marginRight: '10px' }} /> Transaction Details</h1>
+        <div className="hash-display">
+          <span className="mono">{tx.hash}</span>
+          <button className="icon-btn" onClick={() => handleCopy(tx.hash, 'hash')}>
+            {copied === 'hash' ? <Check size={16} color="#10b981" /> : <Copy size={16} />}
+          </button>
+        </div>
       </div>
-      <div className="card">
-        <div className="row">
-          <span className="label">Hash:</span>
-          <div className="value-with-copy">
-            <span className="value mono">{tx.hash}</span>
-            <button className="copy-btn" onClick={() => handleCopy(tx.hash, 'hash')}>
-              {copied === 'hash' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-            </button>
+
+      <div className="grid-2">
+        <Card title="Overview" delay={0.1}>
+          <div className="detail-row">
+            <span className="label">Block Number</span>
+            <span className="value highlight mono">{tx.block_number}</span>
           </div>
-        </div>
-        <div className="row">
-          <span className="label">Block Number:</span>
-          <span className="value mono">{tx.block_number}</span>
-        </div>
-        <div className="row">
-          <span className="label">From:</span>
-          <div className="value-with-copy">
-            <span className="value mono">{tx.from_address}</span>
-            <button className="copy-btn" onClick={() => handleCopy(tx.from_address, 'from')}>
-              {copied === 'from' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-            </button>
+          <div className="detail-row">
+            <span className="label">Value</span>
+            <span className="value highlight bold">{formatValue(tx.value)}</span>
           </div>
-        </div>
-        <div className="row">
-          <span className="label">To:</span>
-          <div className="value-with-copy">
-            <span className="value mono">{tx.to_address || 'Contract Creation'}</span>
-            {tx.to_address && (
-              <button className="copy-btn" onClick={() => handleCopy(tx.to_address, 'to')}>
-                {copied === 'to' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+          <div className="detail-row">
+            <span className="label">Status</span>
+            <span className="value highlight">Success</span>
+          </div>
+        </Card>
+
+        <Card title="Addresses" delay={0.2}>
+          <div className="detail-row">
+            <span className="label">From</span>
+            <div className="value-with-copy">
+              <span className="value mono small">{tx.from_address.substring(0, 20)}...</span>
+              <button className="icon-btn" onClick={() => handleCopy(tx.from_address, 'from')}>
+                {copied === 'from' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
               </button>
-            )}
+            </div>
           </div>
-        </div>
-        <div className="row">
-          <span className="label">Value:</span>
-          <span className="value bold">{formatValue(tx.value)}</span>
-        </div>
-        {tx.data && tx.data !== '0x' && (
-          <div className="row column">
-            <span className="label">Data:</span>
-            <span className="value mono wrap">{tx.data}</span>
+          <div className="detail-row">
+            <span className="label">To</span>
+            <div className="value-with-copy">
+              <span className="value mono small">{tx.to_address ? tx.to_address.substring(0, 20) + '...' : 'Contract Creation'}</span>
+              {tx.to_address && (
+                <button className="icon-btn" onClick={() => handleCopy(tx.to_address, 'to')}>
+                  {copied === 'to' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                </button>
+              )}
+            </div>
           </div>
-        )}
+        </Card>
       </div>
+
+      {tx.data && tx.data !== '0x' && (
+        <Card title="Input Data" delay={0.3}>
+          <div className="wrap mono">
+            {tx.data}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

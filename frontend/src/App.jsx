@@ -6,8 +6,9 @@ import { TxView } from './components/TxView';
 import { AddressView } from './components/AddressView';
 import { BtcBlockView } from './components/BtcBlockView';
 import { BtcTxView } from './components/BtcTxView';
+import BtcAddressView from './components/BtcAddressView';
 import { fetchBlock, fetchTx, fetchAddress, detectType } from './api';
-import { fetchBtcBlock, fetchBtcTx, detectBtcType } from './api-btc';
+import { fetchBtcBlock, fetchBtcTx, fetchBtcAddress, detectBtcType } from './api-btc';
 import LatestBlocks from './components/LatestBlocks';
 import LatestTransactions from './components/LatestTransactions';
 import LatestBtcBlocks from './components/LatestBtcBlocks';
@@ -145,8 +146,21 @@ function BtcExplore() {
           result = await fetchBtcBlock(query);
           if (urlType !== 'block') navigate(`/btc/block/${query}`, { replace: true });
         } else if (type === 'tx') {
-          result = await fetchBtcTx(query);
-          if (urlType !== 'tx') navigate(`/btc/tx/${query}`, { replace: true });
+          try {
+            result = await fetchBtcTx(query);
+            if (urlType !== 'tx') navigate(`/btc/tx/${query}`, { replace: true });
+          } catch {
+            // Fallback: try as block if it's 64 hex
+            if (/^[a-fA-F0-9]{64}$/.test(query)) {
+              result = await fetchBtcBlock(query);
+              if (urlType !== 'block') navigate(`/btc/block/${query}`, { replace: true });
+            } else {
+              throw new Error('Transaction not found');
+            }
+          }
+        } else if (type === 'address') {
+          result = await fetchBtcAddress(query);
+          if (urlType !== 'address') navigate(`/btc/address/${query}`, { replace: true });
         }
         setData(result);
       } catch (err) {
@@ -167,6 +181,7 @@ function BtcExplore() {
     <div className="content">
       {(urlType === 'block') && <BtcBlockView block={data} onSelectTx={(hash) => navigate(`/btc/tx/${hash}`)} />}
       {(urlType === 'tx') && <BtcTxView tx={data} />}
+      {(urlType === 'address') && <BtcAddressView address={data?.address} />}
     </div>
   );
 }

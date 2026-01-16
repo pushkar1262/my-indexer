@@ -43,7 +43,7 @@ function LatestTransactions({ onSelectTx }) {
             <div className="item-details">
               <span className="item-primary mono">{tx.hash.substring(0, 16)}...</span>
               <span className="item-secondary">
-                From: {tx.from_address.substring(0, 8)}...
+                {tx.from_address.substring(0, 8)}... → {tx.to_address.substring(0, 8)}...
               </span>
             </div>
             <div className="item-meta">

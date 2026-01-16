@@ -24,19 +24,31 @@ export async function fetchLatestBtcTransactions() {
   return response.json();
 }
 
+export async function fetchBtcAddress(address) {
+  const response = await fetch(`${API_URL}/btc/address/${address}`);
+  if (!response.ok) throw new Error('Address not found');
+  return response.json();
+}
+
 export function detectBtcType(query) {
-  // Bitcoin block hash - 64 hex characters
-  if (/^[a-fA-F0-9]{64}$/.test(query)) {
-    return 'block';
-  }
   // Bitcoin block number - digits only
   if (/^\d+$/.test(query)) {
     return 'block';
   }
-  // Bitcoin transaction hash - 64 hex characters
+
+  // Bitcoin hashes (Block or Tx) - 64 hex characters
   if (/^[a-fA-F0-9]{64}$/.test(query)) {
+    // Block hashes in Bitcoin usually start with many leading zeros
+    if (query.startsWith('00000000')) {
+      return 'block';
+    }
     return 'tx';
   }
   
+  // Legacy address (1...) or P2SH (3...) or Bech32 (bc1...)
+  if (/^(1|3|bc1|tb1)[a-zA-Z0-9]{25,62}$/.test(query)) {
+    return 'address';
+  }
+
   return 'unknown';
 }

@@ -41,9 +41,9 @@ function LatestBtcTransactions({ onSelectTx }) {
               <Activity size={20} />
             </div>
             <div className="item-details">
-              <span className="item-primary mono">{tx.tx_hash.substring(0, 16)}...</span>
-              <span className="item-secondary">
-                Size: {tx.size} bytes
+              <span className="item-primary mono">{(tx.tx_hash || '').substring(0, 16)}...</span>
+              <span className="item-secondary mono">
+                {(tx.from_address || 'Unknown').substring(0, 8)}... → {(tx.to_address || 'Unknown').substring(0, 8)}...
               </span>
             </div>
             <div className="item-meta">
